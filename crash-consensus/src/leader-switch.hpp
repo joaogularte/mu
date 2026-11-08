@@ -693,9 +693,8 @@ class LeaderSwitcher {
           // std::cout << "Blocking the follower" << std::endl;
 
           GET_TIMESTAMP(switch_end);
-          last_switch_ns.store(hard_reset
-                                   ? 0
-                                   : ELAPSED_NSEC(switch_start, switch_end));
+          last_switch_ns.store(
+              hard_reset ? 0 : ELAPSED_NSEC(switch_start, switch_end));
 
           leader_mode.store(true);
 

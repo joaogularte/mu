@@ -30,9 +30,10 @@ using Clock = std::chrono::steady_clock;
 static constexpr auto proposeBeforePause = std::chrono::milliseconds(2);
 
 static uint64_t nowNs() {
-  return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                   Clock::now().time_since_epoch())
-                                   .count());
+  return static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+          Clock::now().time_since_epoch())
+          .count());
 }
 
 static void spinFor(std::chrono::nanoseconds duration) {
@@ -169,14 +170,14 @@ int main(int argc, char* argv[]) {
   // Outstanding requests are disabled, so that a proposal that returns has been
   // replicated.
   dory::Consensus consensus(id, remote_ids, 0, dory::ThreadBank::A);
-  consensus.commitHandler([&commits, &last_commit_ns](
-                              bool leader, [[maybe_unused]] uint8_t* buf,
-                              [[maybe_unused]] size_t len) {
-    if (!leader) {
-      last_commit_ns.store(nowNs());
-      commits.fetch_add(1);
-    }
-  });
+  consensus.commitHandler(
+      [&commits, &last_commit_ns](bool leader, [[maybe_unused]] uint8_t* buf,
+                                  [[maybe_unused]] size_t len) {
+        if (!leader) {
+          last_commit_ns.store(nowNs());
+          commits.fetch_add(1);
+        }
+      });
 
   // Wait enough time for the consensus to become ready
   std::cout << "Wait some time" << std::endl;
