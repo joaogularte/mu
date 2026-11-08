@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -55,8 +56,11 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  const int times =
-      static_cast<int>(1.5 * 1024) * 1024 * 1024 / (payload_size + 64);
+  // Stay below the log size, so that the log never gets recycled
+  int times = static_cast<int>(1.5 * 1024) * 1024 * 1024 / (payload_size + 64);
+  if (argc > 4) {
+    times = std::min(times, atoi(argv[4]));
+  }
   benchmark(id, remote_ids, times, payload_size, outstanding_req,
             dory::ThreadBank::A);
 
@@ -96,7 +100,7 @@ void benchmark(int id, std::vector<int> remote_ids, int times, int payload_size,
 
     std::vector<std::vector<uint8_t>> payloads(8192);
     for (size_t i = 0; i < payloads.size(); i++) {
-      payloads[i].resize(payload_size);
+      payloads[i].resize(payload_size + 1);
       mkrndstr_ipa(payload_size, &(payloads[i][0]));
     }
 

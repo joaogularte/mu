@@ -37,6 +37,9 @@ class Consensus {
 
   ProposeError propose(uint8_t *buf, size_t len);
   int potentialLeader();
+  // Time this process spent acquiring write permissions the last time it became
+  // leader, or 0 if that required resetting the connections.
+  uint64_t lastPermissionSwitchNs();
   bool blockedResponse();
   std::pair<uint64_t, uint64_t> proposedReplicatedRange();
 

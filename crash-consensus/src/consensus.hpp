@@ -84,6 +84,10 @@ class RdmaConsensus {
 
   inline int potentialLeader() { return potential_leader; }
 
+  inline uint64_t lastPermissionSwitchNs() const {
+    return leader_election->lastPermissionSwitchNs();
+  }
+
   inline std::pair<uint64_t, uint64_t> proposedReplicatedRange() {
     return std::make_pair(majW->range_start, majW->range_end);
   }

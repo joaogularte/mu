@@ -30,7 +30,7 @@ class LeaderHeartbeat {
  private:
   // static constexpr std::chrono::nanoseconds heartbeatRefreshRate =
   // std::chrono::nanoseconds(500);
-  static constexpr int history_length = 50;
+  int history_length = 50;
 
  public:
   LeaderHeartbeat() {}
@@ -40,6 +40,10 @@ class LeaderHeartbeat {
 
   void startPoller() {
     read_seq = 0;
+
+    ConsensusConfig::HeartbeatConfig config;
+    history_length = config.maxScore;
+    busy_scanning = config.scanIntervalUs > 0;
 
     rcs = &(ctx->cc.ce.connections());
     my_id = ctx->cc.my_id;
@@ -198,7 +202,7 @@ class LeaderHeartbeat {
 
     if (leader_pid() == ctx->cc.my_id) {
       want_leader.store(true);
-    } else {
+    } else if (!busy_scanning) {
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
       // std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
@@ -253,6 +257,7 @@ class LeaderHeartbeat {
 
   LeaderContext *ctx;
   std::atomic<bool> want_leader;
+  bool busy_scanning = false;
   std::map<int, ReliableConnection> *rcs;
   ReliableConnection *loopback;
 
@@ -602,8 +607,10 @@ class LeaderSwitcher {
         // std::cout << "A" << std::endl;
         if (!leader_mode.load()) {
           // TIMESTAMP_T ts_start, ts_mid, ts_end;
+          TIMESTAMP_T switch_start, switch_end;
 
           // GET_TIMESTAMP(ts_start);
+          GET_TIMESTAMP(switch_start);
 
           // std::cout << "Asking for permissions: " << hard_reset << std::endl;
           // Ask for permission. Wait for everybody to reply
@@ -684,6 +691,11 @@ class LeaderSwitcher {
 
           // GET_TIMESTAMP(ts_start);
           // std::cout << "Blocking the follower" << std::endl;
+
+          GET_TIMESTAMP(switch_end);
+          last_switch_ns.store(hard_reset
+                                   ? 0
+                                   : ELAPSED_NSEC(switch_start, switch_end));
 
           leader_mode.store(true);
 
@@ -775,6 +787,8 @@ class LeaderSwitcher {
 
   std::atomic<Leader> &leaderSignal() { return leader; }
 
+  uint64_t lastPermissionSwitchNs() const { return last_switch_ns.load(); }
+
   // Move assignment operator
   LeaderSwitcher &operator=(LeaderSwitcher &&o) {
     if (&o == this) {
@@ -817,6 +831,7 @@ class LeaderSwitcher {
   std::atomic<bool> *want_leader;
   Leader prev_leader;
   std::atomic<Leader> leader;
+  std::atomic<uint64_t> last_switch_ns{0};
 
   std::vector<uint8_t *> dummy;
   std::vector<uint8_t *> &read_slots;
@@ -866,6 +881,10 @@ class LeaderElection {
     return leader_switcher.leaderSignal();
   }
 
+  uint64_t lastPermissionSwitchNs() const {
+    return leader_switcher.lastPermissionSwitchNs();
+  }
+
  private:
   void startHeartbeat() {
     if (hb_started) {
@@ -877,6 +896,8 @@ class LeaderElection {
     std::future<void> ftr = hb_exit_signal.get_future();
     heartbeat_thd = std::thread([this, ftr = std::move(ftr)]() {
       leader_heartbeat.startPoller();
+
+      ConsensusConfig::HeartbeatConfig hb_config;
 
       std::string fifo("/tmp/fifo-" + std::to_string(ctx.cc.my_id));
       if (unlink(fifo.c_str())) {
@@ -946,7 +967,15 @@ class LeaderElection {
 
         prev_command = current_command;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        if (hb_config.scanIntervalUs > 0) {
+          auto until = std::chrono::steady_clock::now() +
+                       std::chrono::microseconds(hb_config.scanIntervalUs);
+          while (std::chrono::steady_clock::now() < until) {
+            ;
+          }
+        } else {
+          std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
 
         // if (i == 0) {
         //   if (ftr.wait_for(std::chrono::seconds(0)) !=
