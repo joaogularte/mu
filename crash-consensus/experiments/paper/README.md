@@ -16,17 +16,19 @@ Each script writes the raw samples, the logs of all the replicas and a
 
 ## Setup
 
-The profile clones `LPD-EPFL/mu`, which does not have these changes. Copy this
-tree over `/local/mu` on all 4 nodes from your machine, once `/local/setup.log`
-says `fim`:
+The profile clones this fork ([joaogularte/mu](https://github.com/joaogularte/mu))
+into `/local/mu`, but only if `/local/mu` does not exist yet. In an experiment
+created before the profile switched to the fork, or to get newer commits, update
+the clone on all 4 nodes:
 
 ```sh
-for node in <node0> <node1> <node2> <node3>; do
-  rsync -az --delete --exclude .git --exclude build --exclude .deps ./ "$node":/local/mu/
-done
+cd /local/mu
+git remote set-url origin https://github.com/joaogularte/mu.git
+git pull
 ```
 
-On all 4 nodes, build the library and the benchmarks (`/local/repository/build-mu.sh`
+Once `/local/setup.log` says `fim`, build the library and the benchmarks on all 4
+nodes the library and the benchmarks (`/local/repository/build-mu.sh`
 also works, but it builds the Redis, Memcached and Liquibook experiments too):
 
 ```sh
