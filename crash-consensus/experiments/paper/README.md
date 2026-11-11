@@ -28,14 +28,18 @@ git pull
 ```
 
 Once `/local/setup.log` says `fim`, build the library and the benchmarks on all 4
-nodes the library and the benchmarks (`/local/repository/build-mu.sh`
-also works, but it builds the Redis, Memcached and Liquibook experiments too):
+nodes, as your user (not root):
 
 ```sh
-cd /local/mu
-./build.py crash-consensus
-crash-consensus/demo/using_conan_fully/build.sh gcc-release
+/local/repository/build-mu.sh
+source ~/.bashrc
 ```
+
+`build-mu.sh` sets up the Conan profile, then runs `./build.py crash-consensus`
+and `crash-consensus/demo/using_conan_fully/build.sh gcc-release`, which build
+`main-st`, `main-st-lat` and `main-failover`. It does not build the Redis,
+Memcached and Liquibook experiments. It also adds `source /local/rdma.env` to
+`~/.bashrc`. Run it again after a `git pull`.
 
 `node3` must be able to SSH into the replicas without a password. If it cannot,
 connect to it with `ssh -A`. Then check the setup from `node3` and fix anything
