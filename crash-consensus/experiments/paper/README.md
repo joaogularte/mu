@@ -41,9 +41,24 @@ and `crash-consensus/demo/using_conan_fully/build.sh gcc-release`, which build
 Memcached and Liquibook experiments. It also adds `source /local/rdma.env` to
 `~/.bashrc`. Run it again after a `git pull`.
 
-`node3` must be able to SSH into the replicas without a password. If it cannot,
-connect to it with `ssh -A`. Then check the setup from `node3` and fix anything
-reported as `FAIL`:
+`node3` must be able to SSH into the replicas without a password, since the
+scripts use `ssh -o BatchMode=yes`. Otherwise `preflight.sh` reports
+`Permission denied (publickey)`. Create a key on `node3` and add it to the
+replicas:
+
+```sh
+# node3
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub
+# node0, node1 and node2
+echo '<the line printed above>' >> ~/.ssh/authorized_keys
+```
+
+Connecting to `node3` with `ssh -A` also works, but only if your key is loaded in
+your local agent (`ssh-add -l`), and not inside a `tmux` session started before
+the connection.
+
+Then check the setup from `node3` and fix anything reported as `FAIL`:
 
 ```sh
 cd /local/mu/crash-consensus/experiments/paper
