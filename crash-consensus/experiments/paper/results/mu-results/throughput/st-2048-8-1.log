@@ -1,0 +1,28 @@
+USING PAYLOAD SIZE = 2048
+USING OUTSTANDING_REQ = 8
+[CONS:info] Device name: mlx4_0, Device verbs name: uverbs0, Extra info: NodeType::CA TransportType::IB
+[CONS:info] Binding to the first port of the device... OK
+[CONS:info] Binded on (port_id, port_lid) = (1, 109)
+[CB:info] PD 'primary' registered
+[CB:info] Buffer 'shared-buf' of size 2147483648 allocated
+[CB:info] MR 'shared-mr' under PD 'primary' registered with buf 'shared-buf' and rights 7
+[CB:info] CQ 'cq-replication' registered
+[CB:info] CQ 'cq-leader-election' registered
+[CE:info] Publishing qp qp-replication-1-for-2
+[CE:info] Publishing qp qp-replication-1-for-3
+[CE:info] Publishing qp qp-leader-election-1-for-2
+[CE:info] Publishing qp qp-leader-election-1-for-3
+[CE:info] Loopback connection was added
+[CONS:info] Scratchpad memory :: slot size: 1048576 bytes, total size: 34603008 bytes.
+[CONS:info] Log allocation... OK
+[CONS:info] Log (address: 0x7f8c546a4040, size: 2112880640 bytes)
+[CE:info] Connected with qp-replication-2-for-1
+[CE:info] Connected with qp-replication-3-for-1
+[CE:info] Connected with qp-leader-election-2-for-1
+[CE:info] Connected with qp-leader-election-3-for-1
+[CE:info] Loopback connection was established
+[CONS:info] Waiting (5 sec) for all threads to start
+Wait some time
+Permissions granted
+Started
+Replicated 5000 commands of size 2048 bytes in 4103615 ns

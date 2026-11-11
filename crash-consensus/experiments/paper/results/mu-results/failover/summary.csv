@@ -1,0 +1,3 @@
+metric,samples,p1_ns,p50_ns,p99_ns,mean_ns,max_ns
+total,20,1112668,1168878,1235414,1175108,1235963
+permissions,20,63242,84135,97803,84141,98800
