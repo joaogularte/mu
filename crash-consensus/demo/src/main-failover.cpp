@@ -143,10 +143,17 @@ static void measureTakeovers(dory::Consensus& consensus, int id,
 int main(int argc, char* argv[]) {
   if (argc < 5) {
     throw std::runtime_error(
-        "Provide <process_id> <rounds> <payload_size> <settle_ms>");
+        "Provide <process_id> <rounds> <payload_size> <settle_ms> "
+        "[<nr_procs>, default 3]");
   }
 
-  constexpr int nr_procs = 3;
+  // Every process must get the same number of processes. Process 1 is the
+  // leader that is paused and process 2 the one that takes over, for any count.
+  int nr_procs = argc > 5 ? atoi(argv[5]) : 3;
+  if (nr_procs < 3) {
+    throw std::runtime_error("Need at least 3 processes");
+  }
+
   constexpr int minimum_id = 1;
   int id = atoi(argv[1]);
   if (id < minimum_id || id >= minimum_id + nr_procs) {
@@ -179,9 +186,10 @@ int main(int argc, char* argv[]) {
         }
       });
 
-  // Wait enough time for the consensus to become ready
+  // Wait enough time for the consensus to become ready. Process 1 starts
+  // proposing last, once the others are waiting.
   std::cout << "Wait some time" << std::endl;
-  std::this_thread::sleep_for(std::chrono::seconds(5 + 3 - id));
+  std::this_thread::sleep_for(std::chrono::seconds(5 + nr_procs - id));
 
   std::vector<uint8_t> payload(payload_size + 1);
   mkrndstr_ipa(payload_size, &payload[0]);

@@ -16,11 +16,12 @@ PAYLOAD="${PAYLOAD:-64}"
 SETTLE_MS="${SETTLE_MS:-200}"
 HB_MAX_SCORE="${HB_MAX_SCORE:-15}"
 HB_SCAN_US="${HB_SCAN_US:-20}"
-OUT="$RESULTS_DIR/failover"
+OUT="${OUT:-$RESULTS_DIR/failover}"
 mkdir -p "$OUT"
 
+echo "fail-over with ${#REPLICAS[@]} replicas: ${REPLICAS[*]} (registry $REGISTRY_IP)"
 run_replicas "$OUT/run" "DORY_HB_MAX_SCORE=$HB_MAX_SCORE DORY_HB_SCAN_US=$HB_SCAN_US" \
-  main-failover "$ROUNDS" "$PAYLOAD" "$SETTLE_MS" || exit 1
+  main-failover "$ROUNDS" "$PAYLOAD" "$SETTLE_MS" "${#REPLICAS[@]}" || exit 1
 
 $SCP "${REPLICAS[1]}:$WORK_DIR/failover-*-2.txt" "$OUT/"
 

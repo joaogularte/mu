@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shared by the run-*.sh scripts. They run on the client (node3 of the
+# Shared by the run-*.sh scripts. They run on the client (the last node of the
 # mu-cloudlab-ib profile) and drive the replicas over SSH.
 
 set -u
@@ -7,8 +7,15 @@ set -u
 PAPER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 BIN_DIR="$PAPER_DIR/../../demo/using_conan_fully/build/bin"
 
-REPLICAS=(${REPLICAS:-10.10.1.1 10.10.1.2 10.10.1.3})
-REGISTRY_IP="${REGISTRY_IP:-10.10.1.4}"
+# Replicas: 10.10.1.1..NR_REPLICAS, unless REPLICAS lists them explicitly.
+NR_REPLICAS="${NR_REPLICAS:-3}"
+if [ -z "${REPLICAS:-}" ]; then
+  REPLICAS=""
+  for i in $(seq 1 "$NR_REPLICAS"); do REPLICAS="$REPLICAS 10.10.1.$i"; done
+fi
+REPLICAS=($REPLICAS)
+# The registry runs on the client itself, so it defaults to the client's IP.
+REGISTRY_IP="${REGISTRY_IP:-$(source /local/rdma.env 2>/dev/null; echo "${RDMA_IP:-10.10.1.4}")}"
 REGISTRY_PORT="${REGISTRY_PORT:-9999}"
 RESULTS_DIR="${RESULTS_DIR:-$HOME/mu-results}"
 RUN_TIMEOUT_S="${RUN_TIMEOUT_S:-1800}"
